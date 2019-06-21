@@ -310,7 +310,7 @@ def s3move(place1, place2, mime, s3):
     except boto.exception.S3ResponseError:
         bucket = s3.create_bucket(parts.netloc)
         l.debug('bucket created')
-    if not(bucket.get_key(parts.path, validate=False)):
+    if not(bucket.get_key(parts.path)):
         key = bucket.new_key(parts.path)
         # metadata has to be set before setting contents/creating object. 
         # See https://gist.github.com/garnaat/1791086
