@@ -317,9 +317,7 @@ def s3move(place1, place2, mime, s3, acl=None):
         # metadata has to be set before setting contents/creating object. 
         # See https://gist.github.com/garnaat/1791086
         key.set_metadata("Content-Type", mime)
-        if acl:
-            key.set_acl(acl)
-        key.set_contents_from_filename(place1)
+        key.set_contents_from_filename(place1, policy=acl)
         # key.set_acl('public-read')
         l.debug('file sent to s3')
     else:
