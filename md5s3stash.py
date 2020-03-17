@@ -93,7 +93,8 @@ def md5s3stash(
         url_auth=None,
         url_cache={},
         hash_cache={},
-        bucket_scheme='simple'
+        bucket_scheme='simple',
+        acl=None
     ):
     """ stash a file at `url` in the named `bucket_base` ,
         `conn` is an optional boto.connect_s3()
@@ -114,7 +115,7 @@ def md5s3stash(
     s3_url = md5_to_s3_url(md5, bucket_base, bucket_scheme=bucket_scheme)
     if conn is None:
         conn = boto.connect_s3()
-    s3move(file_path, s3_url, mime_type, conn)
+    s3move(file_path, s3_url, mime_type, conn, acl)
     (mime, dimensions) = image_info(file_path)
     os.remove(file_path)  # safer than rmtree
     hash_cache[md5] = (s3_url, mime, dimensions)
@@ -293,13 +294,14 @@ def checkChunks(url, auth=None, cache={}):
     return temp_file.name, md5, mime_type
 
 
-def s3move(place1, place2, mime, s3):
+def s3move(place1, place2, mime, s3, acl=None):
     l = logging.getLogger('MD5S3:s3move')
     l.debug({
         'place1': place1,
         'place2': place2,
         'mime': mime,
         's3': s3,
+        'acl': acl
     })
     parts = urllib.parse.urlsplit(place2)
     # SplitResult(scheme='s3', netloc='test.pdf', path='/dkd', query=''
@@ -315,6 +317,8 @@ def s3move(place1, place2, mime, s3):
         # metadata has to be set before setting contents/creating object. 
         # See https://gist.github.com/garnaat/1791086
         key.set_metadata("Content-Type", mime)
+        if acl:
+            key.set_acl(acl)
         key.set_contents_from_filename(place1)
         # key.set_acl('public-read')
         l.debug('file sent to s3')
